@@ -10,4 +10,4 @@ print (sum([int(int(m)/3)-2 for m in modules]))
 def addFuel(m): # recursive
     return m + addFuel(int(m/3)-2) if m > 8 else m
 
-print (sum([addFuel(int(m)) for m in modules]) - sum([int(m) for m in modules]))
+print (sum([addFuel(int(m)) - int(m) for m in modules]) )
