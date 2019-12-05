@@ -2,40 +2,49 @@ code = [3,225,1,225,6,6,1100,1,238,225,104,0,2,136,183,224,101,-5304,224,224,4,2
 
 i = 0
 while True:
+    opcode = code[i]
     p1, p2, p3 = code[i+1:i+4]
-    if code[i] == 1:
-        code[p3] = code[p1] + code[p2]
-    elif code[i] == 101:
-        code[p3] = code[i+1] + code[p2]
-    elif code[i] == 1101:
-        code[p3] = code[i+1] + code[i+2]
-    elif code[i] == 1001:
-        code[p3] = code[p1] + code[i+2]
-    elif code[i] == 2:
-        code[p3] = code[p1] * code[p2]
-    elif code[i] == 102:
-        code[p3] = code[i+1] * code[p2]
-    elif code[i] == 1102:
-        code[p3] = code[i+1] * code[i+2]
-    elif code[i] == 1002:
-        code[p3] = code[p1] * code[i+2]
-    elif code[i] == 3:
-        code[code[i+1]] = int(input('input:'))
-    elif code[i] == 4:
-        print (code[code[i+1]])
-    elif code[i] == 104:
-        print (code[i+1])
-    elif code[i] == 5:
-        if code[code[i+1]] != 0:
-            i = code[code[i+2]]
+    
+    if opcode > 1000:
+        opcode -= 1000
+    elif opcode != 4:
+        p2 = code[p2]
+    
+    if opcode > 100:
+        opcode -= 100
+    elif opcode != 3:
+        p1 = code[p1]
+    
+    if opcode == 1:
+        code[p3] = p1 + p2
+    elif opcode == 2:
+        code[p3] = p1 * p2
+    elif opcode == 7:
+        code[p3] = 1 if p1 < p2 else 0
+    elif opcode == 8:
+        code[p3] = 1 if p1 == p2 else 0
+    elif opcode == 3:
+        code[p1] = int(input('input:'))
+    elif opcode == 4:
+        print (p1)
+        if p1 != 0:
+            break
+    elif opcode == 5:
+        if p1 != 0:
+            i = p2
         else:
             i += 3
-    elif code[i] == 99:
+    elif opcode == 6:
+        if p1 == 0:
+            i = p2
+        else:
+            i += 3
+    elif opcode == 99:
         break
     else:
         print (i, code[i])
         break
-    if 3 <= code[i] <= 4 or code[i] == 104:
+    if 3 <= opcode <= 4:
         i += 2
-    elif code[i] != 5:
+    elif not 5 <= opcode <= 6:
         i += 4
