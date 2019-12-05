@@ -30,15 +30,9 @@ while True:
         if p1 != 0:
             break
     elif opcode == 5:
-        if p1 != 0:
-            i = p2
-        else:
-            i += 3
+        i = p2 if p1 != 0 else i+3
     elif opcode == 6:
-        if p1 == 0:
-            i = p2
-        else:
-            i += 3
+        i = p2 if p1 == 0 else i+3
     elif opcode == 99:
         break
     else:
