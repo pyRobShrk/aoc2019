@@ -8,7 +8,7 @@ for orb in orbitals.split():
 def orbits(key,orbitMap):
     i = orbitMap.find(')'+key)
     if i != -1:
-        return orbits(orbitMap[i-3:i], orbitMap[:i-3] + orbitMap[i+5:]) + ')' + key
+        return orbits(orbitMap[i-3:i], orbitMap) + ')' + key
     else:
         return key
 
