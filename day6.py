@@ -6,6 +6,7 @@ for orb in orbitals.split():
     bodies.add(b)
 
 def orbits(key,orbitMap):
+    #return orbits(orbitMap.split(key)[0][-3:], orbitMap)+')'+key if not key == 'COM' else key
     i = orbitMap.find(')'+key)
     if i != -1:
         return orbits(orbitMap[i-3:i], orbitMap) + ')' + key
