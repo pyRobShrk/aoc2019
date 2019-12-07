@@ -26,3 +26,8 @@ while me[i]==santa[i]:
 me = me[i:]
 santa = santa[i:]
 print (me.count(')') + santa.count(')') )
+
+# All bodies gravitate toward a body with more pull.
+# Except for COM at the center: A big black hole.
+# Trace each body back to COM with recursive function calls.
+# Then count the smiles for the shortest path from YOU to SANta Claus.
