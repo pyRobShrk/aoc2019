@@ -15,10 +15,7 @@ class intCode:
             if opcode > 1000:
                 opcode -= 1000
             elif opcode not in (3,4):
-                try:
-                    p2 = self.code[p2]
-                except:
-                    print (opcode,p2)
+                p2 = self.code[p2]
 
             if opcode > 100:
                 opcode -= 100
@@ -35,22 +32,15 @@ class intCode:
                 self.code[self.code[i+3]] = 1 if p1 == p2 else 0
             elif opcode == 3:
                 self.code[p1] = inputs.pop(0) if inputs else int(input('input required:'))
+                i += 2
             elif opcode == 4:
-                #print (p1)
-                if p1 != 0:
-                    self.i = i+2
-                    return p1
+                self.i = i+2
+                return p1
             elif opcode == 5:
                 i = p2 if p1 != 0 else i+3
             elif opcode == 6:
                 i = p2 if p1 == 0 else i+3
-            else:
-                print (i, code[i])
-                break
-            if 3 <= opcode <= 4:
-                i += 2
-            elif not 5 <= opcode <= 6:
-                i += 4
+            i += 4 if opcode in (1,2,7,8) else 0
         self.halt = True
         return self.code[0]
 
@@ -66,9 +56,6 @@ for trial in l:
     trials = max(a,trials)
 print (trials)
 
-
-# SECOND PART BELOW DOES NOT WORK
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class ampChain:
     def __init__(self,program, numAmps=5):
         self.amps = [intCode(program.copy()) for _ in range(numAmps)]
@@ -85,7 +72,7 @@ class ampChain:
                 return self._temp
             else:
                 self._temp = temp
-            self.ampNum += 1 if self.ampNum < len(self.amps)-1 else -len(self.amps)-1
+            self.ampNum += 1 if self.ampNum < len(self.amps)-1 else -len(self.amps)+1
 
 l = list(permutations(range(5,10)))
 trials = 0
