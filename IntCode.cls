@@ -9,125 +9,138 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 ' Class Module for running Advent of Code 2019's IntCode in Excel
 ' IntCode is read in and modified as a Range beginning in A1
-' Each time a value in the IntCode changes, it makes a copy on the next row
+' Design Philosophy: Avoid 32-Bit Long Integer overflow by allowing dynamic typing in Excel/VBA
+' Avoid ReDimming Arrays by Using Cells to read/write int codes
+' Take advantage of Excel functionality whenever possible
 
-Private homeCell As Range
-Private relativeBase As LongLong
-Public halt As Boolean
-Private i As LongLong
+Private runSheet As Worksheet
+Private relBase As Single
+Private i As Single
+Public Halt As Boolean
 
 Private Sub Class_Initialize()
-    halt = False
-    relativeBase = 0
+    Halt = False
+    relBase = 0
     i = 0
 End Sub
 
 Public Sub Load(Program As Range)
-    Program.Offset(1, 0).Value = Program.Value 'Make a Copy
-    Set homeCell = Program.Cells(1)
-    Range(homeCell.End(xlToRight).Offset(0, 1), homeCell.End(xlToRight).End(xlToRight).Offset(1, 0)).Value = 0
+    Set runSheet = Program.Parent
+    hasI = False
+    hasBase = False
+    
+    For Each nm In runSheet.Names
+        If nm.Name = runSheet.Name & "!_i" Then
+            i = [_i]
+            hasI = True
+        ElseIf nm.Name = runSheet.Name & "!_base" Then
+            relBase = [_base]
+            hasBase = True
+        End If
+    Next nm
+    
+    If Not hasI Then
+        runSheet.Names.Add "_i", "=0"
+    End If
+    
+    If Not hasBase Then
+        runSheet.Names.Add "_base", "=0"
+    End If
 End Sub
 
-Private Function getItem(n As LongLong) As LongLong
-    getItem = homeCell.Offset(0, n).End(xlDown).Value
+Private Function Item(n As Single) As Range
+    Set Item = runSheet.Cells(n + 1)
 End Function
 
-Private Function setItem(n As LongLong) As Range
-    Set setItem = homeCell.Offset(0, n).End(xlDown).Offset(1, 0)
-End Function
-
-Public Function Run(Optional inVal) As LongLong
-    Dim p1 As LongLong
-    Dim p2 As LongLong
-    Dim p3 As LongLong
-    Dim opCode As LongLong
+Public Function Run(Optional inVal) As Double
+Application.ScreenUpdating = False
+    Dim p1 As Variant
+    Dim p2 As Variant
+    Dim p3 As Variant
+    Dim opCode As Integer
     
-    Do While Not getItem(i) = 99
-        opCode = getItem(i)
-        p1 = getItem(i + 1)
-        p2 = getItem(i + 2)
-        p3 = getItem(i + 3)
+    Do Until Int(Item(i)) = 99
+        opCode = Int(Item(i))
+        Set p1 = Item(i + 1)
+        Set p2 = Item(i + 2)
+        Set p3 = Item(i + 3)
         
         'Parameter Three Mode
         If opCode > 20000 Then
             opCode = opCode - 20000
-            p3 = p3 + relativeBase
+            p3 = CSng(p3) + relBase
         End If
         
         'Parameter Two Mode
-        If opCode > 1000 Then
+        If opCode > 1000 Then 'Immediate Mode
             opCode = opCode - 1000
-            If opCode > 1000 Then
+            If opCode > 1000 Then 'Relative Mode
                 opCode = opCode - 1000
-                p2 = getItem(relativeBase + p2)
+                Set p2 = Item(CSng(p2) + relBase)
             End If
-        ElseIf InStr(1, Right(str(opCode), 1), "349") Then
-            p2 = getItem(p2)
+        ElseIf Not CBool(InStr(1, "349", Right(Str(opCode), 1))) Then 'Position Mode
+            Set p2 = Item(CSng(p2))
         End If
         
         'Parameter One Mode
-        If opCode > 100 Then
+        If opCode > 100 Then 'Immediate Mode
             opCode = opCode - 100
-            If opCode > 100 Then
+            If opCode > 100 Then 'Relative Mode
                 opCode = opCode - 100
-                If Not opCode = 3 Then
-                    p1 = getItem(relativeBase + p1)
+                If opCode = 3 Then
+                    p1 = CSng(p1) + relBase
                 Else
-                    p1 = relativeBase + p1
+                    Set p1 = Item(CSng(p1) + relBase)
                 End If
             End If
-        ElseIf Not opCode = 3 Then
-            p1 = getItem(p1)
+        ElseIf Not opCode = 3 Then 'Position Mode
+            Set p1 = Item(CSng(p1))
         End If
         
+        If p1 = "" Then p1 = 0
+        If p2 = "" Then p2 = 0
+        If p3 = "" Then p3 = 0
+        
         Select Case opCode
-            Case 1
-                setItem(p3).Value = p1 + p2
-            Case 2
-                setItem(p3).Value = p1 * p2
-            Case 7
-                If p1 < p2 Then
-                    setItem(p3).Value = 1
-                Else
-                    setItem(p3).Value = 0
-                End If
-            Case 8
-                If p1 = p2 Then
-                    setItem(p3).Value = 1
-                Else
-                    setItem(p3).Value = 0
-                End If
-            Case 3
-                If inVal Is Nothing Then
-                    setItem(p1).Value = Int(InputBox("Input:"))
-                Else
-                    setItem(p1).Value = inVal
-                    inVal = Nothing
-                End If
-            Case 4
+            Case 1 'Addition
+                Item(CSng(p3)) = p1 + p2
+            Case 2 'Multiplication
+                Item(CSng(p3)) = p1 * p2
+            Case 3 'Input
+                Item(CSng(p1)) = inVal
+            Case 4 'Output
                 i = i + 2
                 Run = p1
-            Case 5
-                If Not p1 = 0 Then
-                    i = p2
+                runSheet.Names("_i").RefersTo = "=" & i
+                Exit Function
+            Case 5, 6 'Goto
+                isZero = p1 = 0
+                If opCode = 5 Then isZero = Not isZero
+                If isZero Then
+                    i = CSng(p2)
                 Else
                     i = i + 3
                 End If
-            Case 6
-                If p1 = 0 Then
-                    i = p2
-                Else
-                    i = i + 3
-                End If
-            Case 9
-                relativeBase = relativeBase + p1
+            Case 7 'Less Than
+                Item(CSng(p3)) = Abs(CSng(p1 < p2))
+            Case 8 'Equal To
+                Item(CSng(p3)) = Abs(CSng(p1 = p2))
+            Case 9 'Relative Address
+                relBase = relBase + CSng(p1)
+                runSheet.Names("_base").RefersTo = "=" & relBase
+            Case Else
+                Debug.Print opCode
+                Exit Function
         End Select
+        
         Select Case opCode
             Case 1, 2, 7, 8
                 i = i + 4
             Case 3, 9
                 i = i + 2
         End Select
+        
     Loop
-    halt = True
+    Halt = True
+Application.ScreenUpdating = True
 End Function
