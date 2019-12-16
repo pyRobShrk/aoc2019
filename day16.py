@@ -1,0 +1,31 @@
+import numpy as np
+fft = '59731816011884092945351508129673371014862103878684944826017645844741545300230138932831133873839512146713127268759974246245502075014905070039532876129205215417851534077861438833829150700128859789264910166202535524896960863759734991379392200570075995540154404564759515739872348617947354357737896622983395480822393561314056840468397927687908512181180566958267371679145705350771757054349846320639601111983284494477902984330803048219450650034662420834263425046219982608792077128250835515865313986075722145069152768623913680721193045475863879571787112159970381407518157406924221437152946039000886837781446203456224983154446561285113664381711600293030463013'
+
+def expandSequence(n, sequence=[0,1,0,-1]):
+    data = np.zeros((n,n),dtype='b')
+    for i in np.arange(n):
+        data[i] = np.tile(np.roll(np.repeat(sequence,i+1), -1), 
+                          int(max(1,np.ceil(n/((i+1)*len(sequence))))))[:n]
+    return data
+
+# Part 1
+out = [int(i) for i in fft]
+for _ in range(100):
+    out = np.abs(np.sum(out * expandSequence(len(out)),axis=1)) % 10
+print (out[:8])
+
+# Part 2: Hmm, not going to work for 6.5 million times 100
+# The 8 characters of interest are near the end, and all values past half way are multiplied by only ones
+
+def phaseOnes(vals):
+    for i in range(-2,-len(vals)-1,-1):
+        vals[i] = (vals[i]+vals[i+1]) % 10
+    return vals
+
+out = [int(i) for i in fft]
+out *= 10000
+loc = int(fft[:7])
+tail = out[loc:]
+for _ in range(100):
+    tail = phaseOnes(tail)
+print (tail[:8])
