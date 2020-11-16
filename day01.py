@@ -7,7 +7,7 @@ modules = '''78207 89869 145449 73634 78681 81375 131482 126998 50801 115839 779
 
 print (sum([int(int(m)/3)-2 for m in modules]))
 
-def addFuel(m): # recursive
+def addFuel(m):
     return m + addFuel(int(m/3)-2) if m > 8 else m
 
 print (sum([addFuel(int(m)) - int(m) for m in modules]) )
